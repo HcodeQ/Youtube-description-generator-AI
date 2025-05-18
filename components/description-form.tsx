@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { ChevronDown, ChevronRight, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,6 +11,35 @@ import { EmojiWrapper } from "@/components/emoji-wrapper"
 import { InfoTooltip } from "@/components/info-tooltip"
 import { UsefulLinksSection } from "@/components/useful-links-section"
 import type { FormData, UsefulLink } from "@/types"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import { cn } from "@/lib/utils"
+
+const formSchema = z.object({
+  video_type: z.string().min(1, "Please select a video type"),
+  video_url: z.string()
+    .min(1, "Video URL is required")
+    .url("Please enter a valid YouTube URL")
+    .refine((url) => url.includes("youtube.com") || url.includes("youtu.be"), {
+      message: "Please enter a valid YouTube URL"
+    }),
+  description_tone: z.string().min(1, "Please select a description tone"),
+  optional_keywords: z.string().optional(),
+  hashtags: z.string().optional(),
+  language: z.string().min(1, "Please select a language"),
+  translation: z.string().min(1, "Please select a translation language"),
+  timestamps_mode: z.enum(["automatique", "manuel"]),
+  manual_timestamps: z.string().optional(),
+  useful_links: z.array(
+    z.object({
+      title: z.string(),
+      url: z.string().url("Please enter a valid URL").or(z.string().length(0))
+    })
+  )
+})
+
+type FormValues = z.infer<typeof formSchema>
 
 interface DescriptionFormProps {
   onVideoUrlChange: (url: string) => void
@@ -28,34 +57,54 @@ export function DescriptionForm({
   const [isGenerating, setIsGenerating] = useState(false)
   const [parametersOpen, setParametersOpen] = useState(false)
   const [advancedOpen, setAdvancedOpen] = useState(false)
-  const [timestampsAuto, setTimestampsAuto] = useState(false)
+  const [timestampsAuto, setTimestampsAuto] = useState(true)
   const [usefulLinks, setUsefulLinks] = useState<UsefulLink[]>([{ title: "", url: "" }])
-  const [videoType, setVideoType] = useState<string>("")
-  const [descriptionTone, setDescriptionTone] = useState<string>("")
-  const [optionalKeywords, setOptionalKeywords] = useState<string>("")
-  const [hashtags, setHashtags] = useState<string>("")
-  const [manualTimestamps, setManualTimestamps] = useState<string>("")
-  const [language, setLanguage] = useState<string>("fr")
-  const [translation, setTranslation] = useState<string>("fr")
 
-  const handleGenerate = async () => {
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      video_type: "",
+      video_url: videoUrl,
+      description_tone: "",
+      optional_keywords: "",
+      hashtags: "",
+      language: "fr",
+      translation: "fr",
+      timestamps_mode: "automatique",
+      manual_timestamps: "",
+      useful_links: [{ title: "", url: "" }]
+    }
+  })
+
+  const { register, handleSubmit, formState: { errors }, watch, setValue } = form
+
+  // Watch for video URL changes to sync with parent component
+  const watchedVideoUrl = watch("video_url")
+  useEffect(() => {
+    if (watchedVideoUrl !== videoUrl) {
+      onVideoUrlChange(watchedVideoUrl)
+    }
+  }, [watchedVideoUrl, onVideoUrlChange])
+
+  const onSubmit = async (data: FormValues) => {
     setIsGenerating(true)
     onGenerateStart()
 
-    // Préparer les données du formulaire
     const formData: FormData = {
-      video_type: videoType || "Tutoriel",
-      video_url: videoUrl,
-      description_tone: descriptionTone || "based on the transcript tone",
-      optional_keywords: optionalKeywords,
+      video_type: data.video_type,
+      video_url: data.video_url,
+      description_tone: data.description_tone,
+      optional_keywords: data.optional_keywords || "",
       transcript_format: "CHUNKS",
       transcript: "",
-      languages: [language],
-      translation: translation,
-      hashtags: hashtags,
-      timestamps_mode: timestampsAuto ? "automatique" : "manuel",
-      manual_timestamps: manualTimestamps,
-      useful_links: usefulLinks.filter((link) => link.title && link.url).map((link) => ({ [link.title]: link.url })),
+      languages: [data.language],
+      translation: data.translation,
+      hashtags: data.hashtags || "",
+      timestamps_mode: data.timestamps_mode,
+      manual_timestamps: data.manual_timestamps || "",
+      useful_links: data.useful_links
+        .filter((link) => link.title && link.url)
+        .map((link) => ({ [link.title]: link.url })),
     }
 
     try {
@@ -67,15 +116,14 @@ export function DescriptionForm({
         body: JSON.stringify(formData)
       })
 
-      const data = await res.json()
+      const responseData = await res.json()
       
-      if (data.error) {
-        console.error('Erreur:', data.error)
+      if (responseData.error) {
+        console.error('Erreur:', responseData.error)
       } else {
-        // créer un nouvel objet avec les données initiaux et la description
         const updatedData = {
           ...formData,
-          description: data
+          description: responseData
         }
         onGenerateComplete(updatedData)
       }
@@ -87,7 +135,7 @@ export function DescriptionForm({
   }
 
   return (
-    <div className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <label htmlFor="video-type" className="text-sm font-medium flex items-center">
@@ -95,8 +143,11 @@ export function DescriptionForm({
             Video type
             <InfoTooltip text="Select 'Based on video content' to automatically detect the type of your video from its content." />
           </label>
-          <Select value={videoType} onValueChange={setVideoType}>
-            <SelectTrigger id="video-type" className="w-full">
+          <Select
+            value={watch("video_type")}
+            onValueChange={(value) => setValue("video_type", value)}
+          >
+            <SelectTrigger id="video-type" className={cn("w-full", errors.video_type && "border-red-500")}>
               <SelectValue placeholder="Select type" />
             </SelectTrigger>
             <SelectContent>
@@ -115,6 +166,9 @@ export function DescriptionForm({
               </SelectItem>
             </SelectContent>
           </Select>
+          {errors.video_type && (
+            <p className="text-sm text-red-500">{errors.video_type.message}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -123,8 +177,11 @@ export function DescriptionForm({
             Description tone
             <InfoTooltip text="Select 'Tone based on video' to automatically analyze and match the tone of your video content." />
           </label>
-          <Select value={descriptionTone} onValueChange={setDescriptionTone}>
-            <SelectTrigger id="description-tone" className="w-full">
+          <Select
+            value={watch("description_tone")}
+            onValueChange={(value) => setValue("description_tone", value)}
+          >
+            <SelectTrigger id="description-tone" className={cn("w-full", errors.description_tone && "border-red-500")}>
               <SelectValue placeholder="Select tone" />
             </SelectTrigger>
             <SelectContent>
@@ -142,21 +199,29 @@ export function DescriptionForm({
               </SelectItem>
             </SelectContent>
           </Select>
+          {errors.description_tone && (
+            <p className="text-sm text-red-500">{errors.description_tone.message}</p>
+          )}
         </div>
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="video-url-desc" className="text-sm font-medium flex items-center">
+        <label htmlFor="video-url" className="text-sm font-medium flex items-center">
           <EmojiWrapper emoji="🔗" />
           Video URL
         </label>
         <Input
-          id="video-url-desc"
+          id="video-url"
+          {...register("video_url")}
           placeholder="https://www.youtube.com/watch?v=..."
-          value={videoUrl}
-          onChange={(e) => onVideoUrlChange(e.target.value)}
-          className="w-full transition-all duration-200 focus:ring-2 focus:ring-red-200"
+          className={cn(
+            "w-full transition-all duration-200 focus:ring-2 focus:ring-red-200",
+            errors.video_url && "border-red-500"
+          )}
         />
+        {errors.video_url && (
+          <p className="text-sm text-red-500">{errors.video_url.message}</p>
+        )}
       </div>
 
       <Collapsible
@@ -179,8 +244,8 @@ export function DescriptionForm({
           <Textarea
             placeholder="Entrez des mots-clés séparés par des virgules pour améliorer le SEO"
             className="resize-none"
-            value={optionalKeywords}
-            onChange={(e) => setOptionalKeywords(e.target.value)}
+            value={watch("optional_keywords")}
+            onChange={(e) => setValue("optional_keywords", e.target.value)}
           />
         </CollapsibleContent>
       </Collapsible>
@@ -209,8 +274,8 @@ export function DescriptionForm({
             </label>
             <Input
               placeholder="Entrez des hashtags séparés par des espaces"
-              value={hashtags}
-              onChange={(e) => setHashtags(e.target.value)}
+              value={watch("hashtags")}
+              onChange={(e) => setValue("hashtags", e.target.value)}
             />
           </div>
 
@@ -221,8 +286,11 @@ export function DescriptionForm({
                 Langue de la vidéo
                 <InfoTooltip text="Sélectionnez la langue principale de la vidéo." />
               </label>
-              <Select value={language} onValueChange={setLanguage}>
-                <SelectTrigger id="language" className="w-full">
+              <Select
+                value={watch("language")}
+                onValueChange={(value) => setValue("language", value)}
+              >
+                <SelectTrigger id="language" className={cn("w-full", errors.language && "border-red-500")}>
                   <SelectValue placeholder="Sélectionner la langue" />
                 </SelectTrigger>
                 <SelectContent>
@@ -232,6 +300,9 @@ export function DescriptionForm({
                   <SelectItem value="de">Allemand</SelectItem>
                 </SelectContent>
               </Select>
+              {errors.language && (
+                <p className="text-sm text-red-500">{errors.language.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -240,8 +311,11 @@ export function DescriptionForm({
                 Langue de traduction
                 <InfoTooltip text="Sélectionnez la langue dans laquelle vous souhaitez traduire la transcription." />
               </label>
-              <Select value={translation} onValueChange={setTranslation}>
-                <SelectTrigger id="translation" className="w-full">
+              <Select
+                value={watch("translation")}
+                onValueChange={(value) => setValue("translation", value)}
+              >
+                <SelectTrigger id="translation" className={cn("w-full", errors.translation && "border-red-500")}>
                   <SelectValue placeholder="Sélectionner la traduction" />
                 </SelectTrigger>
                 <SelectContent>
@@ -251,6 +325,9 @@ export function DescriptionForm({
                   <SelectItem value="de">Allemand</SelectItem>
                 </SelectContent>
               </Select>
+              {errors.translation && (
+                <p className="text-sm text-red-500">{errors.translation.message}</p>
+              )}
             </div>
           </div>
 
@@ -300,8 +377,8 @@ export function DescriptionForm({
               <Textarea
                 placeholder="00:00 Introduction&#10;01:23 Premier point&#10;05:45 Conclusion"
                 className="resize-none h-24"
-                value={manualTimestamps}
-                onChange={(e) => setManualTimestamps(e.target.value)}
+                value={watch("manual_timestamps")}
+                onChange={(e) => setValue("manual_timestamps", e.target.value)}
               />
             )}
           </div>
@@ -312,13 +389,13 @@ export function DescriptionForm({
 
       <div className="pt-2">
         <Button
-          onClick={handleGenerate}
-          disabled={!videoUrl || isGenerating}
+          type="submit"
+          disabled={isGenerating}
           className="w-full bg-red-600 hover:bg-red-700 text-white py-6 rounded-md transition-all duration-200"
         >
           {isGenerating ? "Génération en cours..." : "Generate description"}
         </Button>
       </div>
-    </div>
+    </form>
   )
 }

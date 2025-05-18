@@ -9,10 +9,9 @@ import type { FormData, GeneratedDescription } from "@/types"
 
 interface PreviewFormProps {
   data: (FormData & { description?: GeneratedDescription }) | null
-  isGenerating: boolean
 }
 
-export function PreviewForm({ data, isGenerating }: PreviewFormProps) {
+export function PreviewForm({ data }: PreviewFormProps) {
   const [generatedText, setGeneratedText] = useState("")
   const [isComplete, setIsComplete] = useState(false)
   const [copied, setCopied] = useState(false)

@@ -98,7 +98,7 @@ export function YoutubeDescriptionGenerator() {
       {/* Prévisualisation avec animation d'apparition */}
       {showPreview && (
         <div className="w-full lg:w-1/2 ml-6 transition-all duration-500 animate-slide-in">
-          <PreviewForm data={generatedData} isGenerating={isGenerating} />
+          <PreviewForm data={generatedData} />
         </div>
       )}
     </div>

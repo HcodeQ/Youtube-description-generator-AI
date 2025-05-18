@@ -10,7 +10,7 @@ from youtube_transcript_api._errors import TranscriptsDisabled, NoTranscriptFoun
 llm = ChatTogether(
     model="meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
     temperature=1,
-    max_tokens=1300,
+    max_tokens=1000,
     together_api_key="a273b5e896ad97ffca1ce98a227e8f8209a5c530a2dffc3b79e7f3979fe8341a",
 )
 
