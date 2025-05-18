@@ -1,0 +1,164 @@
+# Youtube-description-ai
+
+Générez automatiquement des descriptions YouTube optimisées et engageantes à partir de la transcription d’une vidéo, grâce à l’IA et LangChain.
+
+---
+
+## Sommaire
+
+- [Présentation](#présentation)
+- [Fonctionnalités](#fonctionnalités)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Utilisation](#utilisation)
+- [API](#api)
+- [Exemple de résultat](#exemple-de-résultat)
+- [Dépendances](#dépendances)
+- [Astuces et limitations](#astuces-et-limitations)
+- [Licence](#licence)
+
+---
+
+## Présentation
+
+Ce projet permet de générer automatiquement une description YouTube complète, structurée et optimisée SEO à partir de la transcription d’une vidéo. Il utilise FastAPI pour l’API, LangChain pour l’orchestration des prompts, et un modèle LLM via Together AI.
+
+---
+
+## Fonctionnalités
+
+- **Extraction automatique de la transcription** d’une vidéo YouTube.
+- **Génération de description complète** : titre, résumé, liens utiles, chapitrage, mots-clés, hashtags, call-to-action, présentation de la chaîne.
+- **Optimisation SEO** : intégration naturelle des mots-clés et hashtags.
+- **Personnalisation** : adaptation au ton, à la langue, ajout de liens personnalisés, chapitrage manuel ou automatique.
+- **API REST** pour intégration facile dans vos outils ou frontends.
+
+---
+
+## Installation
+
+1. **Clonez le dépôt**
+   ```bash
+   git clone https://github.com/votre-utilisateur/Youtube-description-ai.git
+   cd Youtube-description-ai
+   ```
+
+2. **Installez les dépendances**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+---
+
+## Configuration
+
+- **Clé API Together**  
+  Renseignez votre clé API dans le fichier `description_generator.py` :
+  ```python
+  TOGETHER_API_KEY = "votre_cle_api"
+  ```
+
+- **Paramètres du modèle**  
+  Vous pouvez ajuster le modèle, la température, et le nombre de tokens dans la création de l’objet `ChatTogether`.
+
+---
+
+## Utilisation
+
+### Lancer l’API
+
+```bash
+uvicorn api:app --reload
+```
+
+L’API sera disponible sur [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) pour tester via Swagger.
+
+### Exemple de requête POST
+
+```json
+POST /generate
+Content-Type: application/json
+
+{
+  "video_type": "analyse",
+  "video_url": "https://www.youtube.com/watch?v=xxxxxxx",
+  "description_tone": "engageant",
+  "optional_keywords": "football, Barça, Ligue des Champions, analyse, critique",
+  "transcript_format": "texte",
+  "transcript": "",
+  "languages": ["fr"],
+  "translation": "",
+  "hashtags": "#Football #Barça #LigueDesChampions #Analyse #Critique",
+  "timestamps_mode": "auto",
+  "manual_timestamps": "",
+  "useful_links": [
+    {"Github": "https://github.com/"},
+    {"LangChain Docs": "https://python.langchain.com"}
+  ]
+}
+```
+
+---
+
+## API
+
+- **Endpoint** : `/generate`
+- **Méthode** : `POST`
+- **Corps attendu** : Voir l’exemple ci-dessus (`VideoData`)
+- **Réponse** : Un JSON structuré avec :
+  - `title`
+  - `resume`
+  - `links`
+  - `timestamps`
+  - `keywords`
+  - `call_to_action`
+  - `about_channel`
+
+---
+
+## Exemple de résultat
+
+```json
+{
+  "title": "Découvrez mon analyse passionnante sur la défaite du Barça ! Tu veux savoir ce qui s'est vraiment passé ? Regarde cette vidéo jusqu'au bout !",
+  "resume": "Dans cette vidéo, je partage avec toi mon avis sur la défaite du Barça et les erreurs qui ont été commises...",
+  "links": [
+    {"Github": "https://github.com/"},
+    {"LangChain Docs": "https://python.langchain.com"}
+  ],
+  "timestamps": "⏱️ Chapitrages : ...",
+  "keywords": "Mots-clés : football, Barça, Ligue des Champions, analyse, critique. #Football #Barça #LigueDesChampions #Analyse #Critique",
+  "call_to_action": "Si tu as aimé cette vidéo, n'oublie pas de liker 👍, de t'abonner 🔔 et de partager avec tes amis ! ...",
+  "about_channel": "Bienvenue sur ma chaîne ! Ici, nous discutons de tout ce qui concerne le football ..."
+}
+```
+
+---
+
+## Dépendances
+
+- `langchain_groq`
+- `langchain_core`
+- `langchain-together`
+- `langchain_community`
+- `youtube-transcript-api`
+- `fastapi`
+- `pydantic`
+
+---
+
+## Astuces et limitations
+
+- **Limite de tokens** : Si la vidéo est longue, la transcription peut dépasser la limite du modèle. Tronquez ou résumez la transcription si besoin.
+- **Transcription YouTube** : Certaines vidéos n’ont pas de transcription disponible (privées, désactivées, etc.).
+- **Personnalisation** : Adaptez le prompt dans `description_generator.py` pour votre thématique ou style.
+
+---
+
+## Licence
+
+MIT
+
+---
+
+_Ajoutez vos captures d’écran ou exemples visuels ici si besoin._
