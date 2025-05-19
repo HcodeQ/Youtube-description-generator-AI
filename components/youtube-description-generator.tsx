@@ -38,6 +38,18 @@ export function YoutubeDescriptionGenerator() {
     setIsSliding(false)
   }
 
+  const handleDescriptionUpdate = (newDescription: string) => {
+    if (generatedData && generatedData.description) {
+      setGeneratedData({
+        ...generatedData,
+        description: {
+          ...generatedData.description,
+          resume: newDescription
+        }
+      })
+    }
+  }
+
   useEffect(() => {
     if (isSliding && showPreview) {
       const timer = setTimeout(() => {
@@ -113,7 +125,10 @@ export function YoutubeDescriptionGenerator() {
             </Button>
           </div>
           <Card className="shadow-sm border border-gray-200 overflow-hidden h-fit">
-            <PreviewForm data={generatedData} />
+            <PreviewForm 
+              data={generatedData} 
+              onDescriptionUpdate={handleDescriptionUpdate}
+            />
           </Card>
         </div>
       )}
