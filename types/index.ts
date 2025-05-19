@@ -1,6 +1,7 @@
 // Types pour l'application
 
 export interface UsefulLink {
+  id: string
   title: string
   url: string
 }
@@ -34,6 +35,6 @@ export interface FormData {
   hashtags: string
   timestamps_mode: string
   manual_timestamps: string
-  useful_links: Record<string, string>[]
+  useful_links: { [key: string]: string }[]
   description?: GeneratedDescription
 }

@@ -20,11 +20,10 @@ export function PreviewForm({ data }: PreviewFormProps) {
   // Texte complet de la description générée
   const fullDescription = data?.description
     ? `
-${data.description.title}
-
+    
 ${data.description.resume}
 
-${data.description.timestamps ? `⏱️ Timestamps:\n${data.description.timestamps}` : ""}
+${data.description.timestamps ? `${data.description.timestamps}` : ""}
 
 ${
   data.description.links && data.description.links.length > 0

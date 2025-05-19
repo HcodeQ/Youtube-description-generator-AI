@@ -1,12 +1,13 @@
 "use client"
 import { useState, useEffect } from "react"
-import { FileText, Languages, Youtube } from "lucide-react"
+import { FileText, Languages, Youtube, ArrowLeft } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
 import { DescriptionForm } from "@/components/description-form"
 import { TranscriptionForm } from "@/components/transcription-form"
 import { PreviewForm } from "@/components/preview-form"
-import type {FormData } from "@/types"
+import type { FormData } from "@/types"
 
 export function YoutubeDescriptionGenerator() {
   const [videoUrl, setVideoUrl] = useState("")
@@ -18,13 +19,13 @@ export function YoutubeDescriptionGenerator() {
   const handleVideoUrlChange = (url: string) => {
     setVideoUrl(url)
   }
+
   const handleGenerateStart = () => {
     setIsGenerating(true)
     setIsSliding(true)
-    // Déclencher l'animation de glissement avant d'afficher la prévisualisation
     setTimeout(() => {
       setShowPreview(true)
-    }, 400) // Attendre que l'animation de glissement soit presque terminée
+    }, 400)
   }
 
   const handleGenerateComplete = (data: FormData) => {
@@ -32,7 +33,11 @@ export function YoutubeDescriptionGenerator() {
     setIsGenerating(false)
   }
 
-  // Réinitialiser l'état de sliding une fois l'animation terminée
+  const handleBackToForm = () => {
+    setShowPreview(false)
+    setIsSliding(false)
+  }
+
   useEffect(() => {
     if (isSliding && showPreview) {
       const timer = setTimeout(() => {
@@ -43,16 +48,12 @@ export function YoutubeDescriptionGenerator() {
   }, [isSliding, showPreview])
 
   return (
-    <div
-      className={`w-full max-w-[1200px] transition-all duration-500 ease-in-out flex ${showPreview ? "justify-between" : "justify-center"}`}
-    >
+    <div className={`w-full max-w-[1200px] transition-all duration-500 ease-in-out flex flex-col lg:flex-row gap-6 ${showPreview ? "lg:justify-between items-start" : "justify-center"}`}>
       {/* Conteneur pour le formulaire principal avec animation */}
-      <div
-        className={`transition-all duration-500 ease-in-out ${showPreview ? "w-full lg:w-1/2" : "w-full max-w-2xl"} ${
-          isSliding ? "animate-slide-left" : ""
-        }`}
-      >
-        <Card className="shadow-sm border border-gray-200 overflow-hidden h-full">
+      <div className={`transition-all duration-500 ease-in-out ${showPreview ? "w-full lg:w-1/2" : "w-full max-w-2xl"} ${
+        isSliding ? "lg:animate-slide-left" : ""
+      } ${showPreview ? "hidden lg:block" : "block"}`}>
+        <Card className="shadow-sm border border-gray-200 overflow-hidden h-fit">
           <CardHeader className="pb-0 border-b-0">
             <div className="flex items-center gap-2 mb-2">
               <Youtube className="h-5 w-5 text-red-500" />
@@ -65,11 +66,13 @@ export function YoutubeDescriptionGenerator() {
               <TabsList className="grid grid-cols-2 mb-4">
                 <TabsTrigger value="description" className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />
-                  Description Generator
+                  <span className="hidden sm:inline">Description Generator</span>
+                  <span className="sm:hidden">Description</span>
                 </TabsTrigger>
                 <TabsTrigger value="transcription" className="flex items-center gap-2">
                   <Languages className="h-4 w-4" />
-                  Transcription
+                  <span className="hidden sm:inline">Transcription</span>
+                  <span className="sm:hidden">Transcript</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -97,8 +100,21 @@ export function YoutubeDescriptionGenerator() {
 
       {/* Prévisualisation avec animation d'apparition */}
       {showPreview && (
-        <div className="w-full lg:w-1/2 ml-6 transition-all duration-500 animate-slide-in">
-          <PreviewForm data={generatedData} />
+        <div className="w-full lg:w-1/2 transition-all duration-500 lg:animate-slide-in">
+          {/* Bouton retour sur mobile */}
+          <div className="lg:hidden mb-4">
+            <Button
+              variant="outline"
+              className="flex items-center gap-2"
+              onClick={handleBackToForm}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to form
+            </Button>
+          </div>
+          <Card className="shadow-sm border border-gray-200 overflow-hidden h-fit">
+            <PreviewForm data={generatedData} />
+          </Card>
         </div>
       )}
     </div>

@@ -33,6 +33,7 @@ const formSchema = z.object({
   manual_timestamps: z.string().optional(),
   useful_links: z.array(
     z.object({
+      id: z.string(),
       title: z.string(),
       url: z.string().url("Please enter a valid URL").or(z.string().length(0))
     })
@@ -58,7 +59,6 @@ export function DescriptionForm({
   const [parametersOpen, setParametersOpen] = useState(false)
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const [timestampsAuto, setTimestampsAuto] = useState(true)
-  const [usefulLinks, setUsefulLinks] = useState<UsefulLink[]>([{ title: "", url: "" }])
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -72,7 +72,7 @@ export function DescriptionForm({
       translation: "fr",
       timestamps_mode: "automatique",
       manual_timestamps: "",
-      useful_links: [{ title: "", url: "" }]
+      useful_links: [{ id: Date.now().toString(), title: "", url: "" }]
     }
   })
 
@@ -85,6 +85,10 @@ export function DescriptionForm({
       onVideoUrlChange(watchedVideoUrl)
     }
   }, [watchedVideoUrl, onVideoUrlChange])
+
+  const handleUsefulLinksChange = (links: UsefulLink[]) => {
+    setValue('useful_links', links)
+  }
 
   const onSubmit = async (data: FormValues) => {
     setIsGenerating(true)
@@ -104,7 +108,7 @@ export function DescriptionForm({
       manual_timestamps: data.manual_timestamps || "",
       useful_links: data.useful_links
         .filter((link) => link.title && link.url)
-        .map((link) => ({ [link.title]: link.url })),
+        .map((link) => ({ [link.title]: link.url }))
     }
 
     try {
@@ -383,7 +387,7 @@ export function DescriptionForm({
             )}
           </div>
 
-          <UsefulLinksSection links={usefulLinks} onChange={setUsefulLinks} />
+          <UsefulLinksSection links={watch("useful_links")} onChange={handleUsefulLinksChange} />
         </CollapsibleContent>
       </Collapsible>
 
