@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect } from "react"
-import { FileText, Languages, Youtube, ArrowLeft } from "lucide-react"
+import { FileText, Languages, ArrowLeft } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -68,8 +68,7 @@ export function YoutubeDescriptionGenerator() {
         <Card className="shadow-sm border border-gray-200 overflow-hidden h-fit">
           <CardHeader className="pb-0 border-b-0">
             <div className="flex items-center gap-2 mb-2">
-              <Youtube className="h-5 w-5 text-red-500" />
-              <h1 className="text-xl font-medium">YouTube Assistant</h1>
+              <h1 className="text-xl font-medium">YouDescript✨</h1>
             </div>
           </CardHeader>
 
